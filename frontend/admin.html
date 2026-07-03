@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxoraa Admin - Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div id="loginScreen" class="login-screen">
+        <div class="login-box">
+            <img src="images/logo.jpg" alt="Luxoraa" class="login-logo">
+            <h2 class="login-title">Admin Login</h2>
+            <p class="login-subtitle">Luxoraa Official Dashboard</p>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-input" id="loginUser" placeholder="Enter username" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="loginPass" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Login</button>
+            </form>
+            <p class="login-hint">Default: admin / admin123</p>
+        </div>
+    </div>
+
+    <div id="adminPanel" class="admin-wrapper" style="display:none;">
+        <!-- Admin Navbar -->
+        <nav class="admin-navbar" id="adminNavbar">
+            <div class="admin-nav-brand">
+                <img src="images/logo.jpg" alt="Luxoraa">
+                <span>LUXORAA ADMIN</span>
+            </div>
+            <div class="admin-nav-links" id="adminNavLinks">
+                <a href="#" class="active" onclick="showTab('dashboard');closeAdminMobileMenu()"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                <a href="#" onclick="showTab('categories');closeAdminMobileMenu()"><i class="fas fa-tags"></i> Categories</a>
+                <a href="#" onclick="showTab('products');closeAdminMobileMenu()"><i class="fas fa-box-open"></i> Products</a>
+                <a href="#" onclick="showTab('social');closeAdminMobileMenu()"><i class="fas fa-share-alt"></i> Social</a>
+                <a href="#" onclick="showTab('addCategory');closeAdminMobileMenu()"><i class="fas fa-plus-circle"></i> Add Category</a>
+                <a href="#" onclick="showTab('addProduct');closeAdminMobileMenu()"><i class="fas fa-plus-square"></i> Add Product</a>
+            </div>
+            <div class="admin-nav-actions">
+                <span class="admin-nav-user"><i class="fas fa-user-shield"></i> Admin</span>
+                <button class="btn-admin btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></button>
+                <button class="admin-mobile-toggle" onclick="toggleAdminMobileMenu()" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+            </div>
+        </nav>
+
+        <!-- Admin Mobile Menu -->
+        <div class="admin-mobile-overlay" id="adminMobileOverlay" onclick="closeAdminMobileMenu()"></div>
+        <div class="admin-mobile-menu" id="adminMobileMenu">
+            <div class="admin-mobile-header">
+                <img src="images/logo.jpg" alt="Luxoraa">
+                <span>Admin Menu</span>
+                <button onclick="closeAdminMobileMenu()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="admin-mobile-links">
+                <a href="#" onclick="showTab('dashboard');closeAdminMobileMenu()"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                <a href="#" onclick="showTab('categories');closeAdminMobileMenu()"><i class="fas fa-tags"></i> Categories</a>
+                <a href="#" onclick="showTab('products');closeAdminMobileMenu()"><i class="fas fa-box-open"></i> Products</a>
+                <a href="#" onclick="showTab('social');closeAdminMobileMenu()"><i class="fas fa-share-alt"></i> Social</a>
+                <a href="#" onclick="showTab('addCategory');closeAdminMobileMenu()"><i class="fas fa-plus-circle"></i> Add Category</a>
+                <a href="#" onclick="showTab('addProduct');closeAdminMobileMenu()"><i class="fas fa-plus-square"></i> Add Product</a>
+                <a href="#" onclick="logout()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                <img src="images/logo.jpg" alt="Luxoraa">
+                <h3>LUXORAA</h3>
+                <p>Admin Dashboard</p>
+            </div>
+            <ul class="admin-nav">
+                <li><a href="#" class="active" onclick="showTab('dashboard')" id="nav-dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+                <li><a href="#" onclick="showTab('categories')" id="nav-categories"><i class="fas fa-tags"></i> Categories</a></li>
+                <li><a href="#" onclick="showTab('products')" id="nav-products"><i class="fas fa-box-open"></i> Products</a></li>
+                <li><a href="#" onclick="showTab('social')" id="nav-social"><i class="fas fa-share-alt"></i> Social Media</a></li>
+                <li><a href="#" onclick="showTab('addCategory')" id="nav-addCategory"><i class="fas fa-plus-circle"></i> Add Category</a></li>
+                <li><a href="#" onclick="showTab('addProduct')" id="nav-addProduct"><i class="fas fa-plus-square"></i> Add Product</a></li>
+                <li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-main">
+            <div class="tab-content active" id="tab-dashboard">
+                <div class="admin-header">
+                    <h2>Dashboard</h2>
+                    <div class="admin-header-actions">
+                        <div class="admin-user"><i class="fas fa-user-shield"></i><span>Administrator</span></div>
+                        <button class="btn-admin btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon gold"><i class="fas fa-tags"></i></div>
+                        <div class="stat-value" id="statCategories">0</div>
+                        <div class="stat-label">Total Categories</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon gold"><i class="fas fa-box-open"></i></div>
+                        <div class="stat-value" id="statProducts">0</div>
+                        <div class="stat-label">Total Products</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon gold"><i class="fas fa-share-alt"></i></div>
+                        <div class="stat-value" id="statSocial">0</div>
+                        <div class="stat-label">Social Links</div>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header"><h3 class="admin-card-title">Recent Products</h3></div>
+                    <div id="recentProducts"></div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-categories">
+                <div class="admin-header">
+                    <h2>Manage Categories</h2>
+                    <button class="btn-admin" onclick="showTab('addCategory')"><i class="fas fa-plus"></i> Add New</button>
+                </div>
+                <div class="admin-card"><div id="categoriesTable"></div></div>
+            </div>
+
+            <div class="tab-content" id="tab-products">
+                <div class="admin-header">
+                    <h2>Manage Products</h2>
+                    <button class="btn-admin" onclick="showTab('addProduct')"><i class="fas fa-plus"></i> Add New</button>
+                </div>
+                <div class="admin-card"><div id="productsTable"></div></div>
+            </div>
+
+            <div class="tab-content" id="tab-social">
+                <div class="admin-header">
+                    <h2>Social Media Links</h2>
+                    <button class="btn-admin" onclick="showTab('addSocial')"><i class="fas fa-plus"></i> Add New</button>
+                </div>
+                <div class="admin-card"><div id="socialTable"></div></div>
+            </div>
+
+            <div class="tab-content" id="tab-addCategory">
+                <div class="admin-header"><h2 id="addCategoryTitle">Add New Category</h2></div>
+                <div class="admin-card">
+                    <form onsubmit="handleAddCategory(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Category Name *</label>
+                                <input type="text" class="form-input" id="catName" placeholder="e.g., Women Fashion" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category Image * <span style="color:var(--text-muted);font-size:0.75rem;">(Recommended: 800x600px, 4:3 ratio)</span></label>
+                            <div class="image-upload-box" onclick="document.getElementById('catImageInput').click()">
+                                <input type="file" id="catImageInput" accept="image/*" style="display:none;" onchange="handleCatImageUpload(this)">
+                                <div id="catImagePreview" class="image-upload-preview">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Click to upload image</p>
+                                    <span>800 x 600 px recommended</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="catImageBase64">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description (Optional)</label>
+                            <textarea class="form-input form-textarea" id="catDesc" placeholder="Enter category description..."></textarea>
+                        </div>
+                        <div style="display:flex;gap:15px;">
+                            <button type="submit" class="btn-admin btn-success"><i class="fas fa-save"></i> Save Category</button>
+                            <button type="button" class="btn-admin btn-secondary" onclick="resetCategoryForm();showTab('categories')"><i class="fas fa-times"></i> Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-addProduct">
+                <div class="admin-header"><h2 id="addProductTitle">Add New Product</h2></div>
+                <div class="admin-card">
+                    <form onsubmit="handleAddProduct(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Product Title *</label>
+                                <input type="text" class="form-input" id="prodTitle" placeholder="Enter product title" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Category *</label>
+                                <select class="form-input" id="prodCategory" required>
+                                    <option value="">Select Category</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Buy Now Link *</label>
+                                <input type="url" class="form-input" id="prodLink" placeholder="https://your-store.com/product" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-input form-textarea" id="prodDesc" placeholder="Enter product description..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Product Images * <span style="color:var(--text-muted);font-size:0.75rem;">(Min 1 - Max 10 images, Recommended: 600x800px, 3:4 ratio)</span></label>
+                            <div class="image-upload-box" onclick="document.getElementById('prodImageInput').click()">
+                                <input type="file" id="prodImageInput" accept="image/*" multiple style="display:none;" onchange="handleProdImagesUpload(this)">
+                                <div id="prodImagesPreview" class="image-upload-preview">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Click to upload images</p>
+                                    <span>Min 1 - Max 10 images | 600 x 800 px recommended</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="prodImagesBase64">
+                            <div id="prodImagesCarousel" class="images-carousel" style="display:none;">
+                                <div class="carousel-header">
+                                    <span id="carouselCount">0/10 images</span>
+                                    <button type="button" class="carousel-clear-btn" onclick="clearProdImages()"><i class="fas fa-trash"></i> Clear All</button>
+                                </div>
+                                <div class="carousel-track" id="carouselTrack"></div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:15px;">
+                            <button type="submit" class="btn-admin btn-success"><i class="fas fa-save"></i> Save Product</button>
+                            <button type="button" class="btn-admin btn-secondary" onclick="resetProductForm();showTab('products')"><i class="fas fa-times"></i> Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-addSocial">
+                <div class="admin-header"><h2 id="addSocialTitle">Add Social Media</h2></div>
+                <div class="admin-card">
+                    <form onsubmit="handleAddSocial(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Platform Name *</label>
+                                <input type="text" class="form-input" id="socialName" placeholder="e.g., Facebook" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">URL *</label>
+                                <input type="url" class="form-input" id="socialUrl" placeholder="https://facebook.com/luxoraa" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Icon Class *</label>
+                                <input type="text" class="form-input" id="socialIcon" placeholder="fab fa-facebook" value="fab fa-" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon Preview</label>
+                                <div style="padding:14px;background:var(--black);border:1px solid var(--border);border-radius:4px;text-align:center;">
+                                    <i id="iconPreview" class="fab fa-" style="font-size:1.5rem;color:var(--gold);"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:15px;">
+                            <button type="submit" class="btn-admin btn-success"><i class="fas fa-save"></i> Save Social Link</button>
+                            <button type="button" class="btn-admin btn-secondary" onclick="resetSocialForm();showTab('social')"><i class="fas fa-times"></i> Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script src="js/admin.js"></script>
+    <script>
+        // Admin mobile menu
+        function toggleAdminMobileMenu() {
+            const menu = document.getElementById('adminMobileMenu');
+            const overlay = document.getElementById('adminMobileOverlay');
+            if (menu.classList.contains('open')) {
+                closeAdminMobileMenu();
+            } else {
+                menu.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeAdminMobileMenu() {
+            document.getElementById('adminMobileMenu').classList.remove('open');
+            document.getElementById('adminMobileOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeAdminMobileMenu();
+        });
+
+        // Sync navbar active state with sidebar
+        function syncNavActive(tab) {
+            document.querySelectorAll('.admin-nav-links a').forEach(a => a.classList.remove('active'));
+            const navLinks = document.querySelectorAll('.admin-nav-links a');
+            navLinks.forEach(a => {
+                if (a.getAttribute('onclick') && a.getAttribute('onclick').includes(`showTab('${tab}')`)) {
+                    a.classList.add('active');
+                }
+            });
+        }
+        
+        // Override showTab to sync navbar
+        const originalShowTab = showTab;
+        showTab = function(tab) {
+            originalShowTab(tab);
+            syncNavActive(tab);
+        };
+    </script>
+</body>
+</html>
