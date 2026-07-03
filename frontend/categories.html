@@ -233,7 +233,7 @@
                     return prodCatId === cat._id;
                 }).length;
                 return `
-                    <div class="category-card animate" style="animation-delay:${i * 0.1}s" onclick="openCategory('${cat._id}')">
+                    <a href="products.html?category=${cat._id}" class="category-card animate" style="animation-delay:${i * 0.1}s; text-decoration:none; display:block;">
                         <img src="${cat.image || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="${cat.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
                         <div class="category-overlay">
                             <div class="category-name">${cat.name}</div>
@@ -241,15 +241,11 @@
                             ${cat.description ? `<div class="category-desc">${cat.description}</div>` : ''}
                             <div class="category-line"></div>
                         </div>
-                    </div>
+                    </a>
                 `;
             }).join('');
 
             observeAnimations();
-        }
-
-        function openCategory(catId) {
-            window.location.href = 'products.html?category=' + catId;
         }
 
         document.addEventListener('DOMContentLoaded', () => {

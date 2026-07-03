@@ -3,12 +3,12 @@
 // Auto-detect API URL based on environment
 const API_URL = (() => {
     const hostname = window.location.hostname;
-
+    
     // Local development
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
         return '/api/public';
     }
-
+    
     // Production - deployed frontend
     // Replace with your actual Render backend URL (NO trailing slash)
     return 'https://luxoraa-official.onrender.com/api/public';
@@ -78,6 +78,7 @@ async function renderSocial() {
 
         if (heroBtn && social.length > 0) {
             heroBtn.href = social[0].url;
+            heroBtn.target = "_blank";
             heroBtn.innerHTML = `<i class="${social[0].icon}"></i> Follow Us`;
         }
     } catch (err) {
@@ -89,19 +90,19 @@ async function renderSocial() {
 async function renderCategories() {
     const grid = document.getElementById("categoriesGrid");
     if (!grid) return;
-
+    
     try {
         const categories = await api('/categories');
         const products = await api('/products');
-
+        
         if (categories.length === 0) {
             grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-tags"></i><h3>No Categories Yet</h3><p>Coming soon...</p></div>';
             return;
         }
-
+        
         // Home page: max 9 categories (3x3 grid)
         const displayCategories = categories.slice(0, 9);
-
+        
         grid.innerHTML = displayCategories
             .map((cat, i) => {
                 const count = products.filter((p) => {
@@ -109,7 +110,7 @@ async function renderCategories() {
                     return prodCatId === cat._id;
                 }).length;
                 return `
-                    <div class="category-card animate" style="animation-delay:${i * 0.1}s" onclick="window.location.href='products.html?category=${cat._id}'">
+                    <a href="products.html?category=${cat._id}" class="category-card animate" style="animation-delay:${i * 0.1}s; text-decoration:none; display:block;">
                         <img src="${cat.image || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="${cat.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
                         <div class="category-overlay">
                             <div class="category-name">${cat.name}</div>
@@ -117,11 +118,11 @@ async function renderCategories() {
                             ${cat.description ? `<div class="category-desc">${cat.description}</div>` : ''}
                             <div class="category-line"></div>
                         </div>
-                    </div>
+                    </a>
                 `;
             })
             .join("");
-
+            
         observeAnimations();
     } catch (err) {
         console.error('Categories load error:', err);
@@ -133,16 +134,16 @@ async function renderCategories() {
 async function renderProducts() {
     const grid = document.getElementById("productsGrid");
     if (!grid) return;
-
+    
     try {
         const products = await api('/products');
         const categories = await api('/categories');
-
+        
         if (products.length === 0) {
             grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-box-open"></i><h3>No Products Yet</h3><p>Coming soon...</p></div>';
             return;
         }
-
+        
         grid.innerHTML = products
             .slice(-10)
             .reverse()
@@ -186,21 +187,21 @@ async function openProductDetail(prodId) {
         const categories = await api('/categories');
         const prod = products.find((p) => p._id === prodId);
         if (!prod) return;
-
+        
         const cat = categories.find((c) => c._id === (prod.categoryId?._id || prod.categoryId));
         const images = prod.images && prod.images.length > 0 ? prod.images : ['https://via.placeholder.com/600x600?text=No+Image'];
-
+        
         const modal = document.getElementById("productDetailModal");
         const content = document.getElementById("productDetailContent");
-
+        
         if (!modal || !content) {
             window.location.href = 'products.html';
             return;
         }
-
+        
         // Format description with proper line breaks and bullet points
         let formattedDesc = prod.description || 'No description available.';
-
+        
         content.innerHTML = `
             <div class="product-detail-images">
                 <img src="${images[0]}" alt="${prod.title}" class="product-detail-main-img" id="detailMainImg" onerror="this.src='https://via.placeholder.com/600x600?text=No+Image'">
