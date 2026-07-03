@@ -1,9 +1,18 @@
 // ===================== LUXORAA OFFICIAL - CUSTOMER APP (API VERSION) =====================
 
 // Auto-detect API URL based on environment
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? '/api/public'  // Local development
-    : 'https://luxoraa-backend.onrender.com/api/public';  // Production - CHANGE THIS TO YOUR RENDER URL
+const API_URL = (() => {
+    const hostname = window.location.hostname;
+    
+    // Local development
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return '/api/public';
+    }
+    
+    // Production - deployed frontend
+    // Replace with your actual Render backend URL (NO trailing slash)
+    return 'https://luxoraa-official.onrender.com/api/public';
+})();
 
 // API Helper
 async function api(endpoint) {

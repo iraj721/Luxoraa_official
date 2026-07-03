@@ -1,15 +1,16 @@
 // ===================== LUXORAA ADMIN PANEL - API VERSION =====================
 
-// Auto-detect API URL based on environment
 const API_URL = (() => {
-    // Vercel/Build time env var
-    if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL_PROD) {
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        return isLocal ? process.env.REACT_APP_API_URL_LOCAL : process.env.REACT_APP_API_URL_PROD;
+    const hostname = window.location.hostname;
+    
+    // Local development
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return '/api/admin';
     }
-    // Fallback (agar .env nahi chali)
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    return isLocal ? '/api/admin' : 'https://luxoraa-backend.onrender.com/api/admin';
+    
+    // Production - deployed admin panel
+    // Replace with your actual Render backend URL
+    return 'https://luxoraa-official.onrender.com/api/admin';
 })();
 
 let authToken = localStorage.getItem('luxoraa_token') || '';
