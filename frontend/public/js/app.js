@@ -100,8 +100,10 @@ async function renderCategories() {
             return;
         }
         
-        // Home page: max 9 categories (3x3 grid)
-        const displayCategories = categories.slice().reverse().slice(0, 9);
+        const displayCategories = categories
+            .slice()
+            .sort((a, b) => b._id.localeCompare(a._id))
+            .slice(0, 9);
         
         grid.innerHTML = displayCategories
             .map((cat, i) => {
@@ -144,10 +146,10 @@ async function renderProducts() {
             return;
         }
         
-        grid.innerHTML = products
+                grid.innerHTML = products
             .slice()
-            .reverse()
-            .slice(0,12)
+            .sort((a, b) => b._id.localeCompare(a._id))
+            .slice(0, 12)
             .map((prod, i) => {
                 const cat = categories.find((c) => c._id === (prod.categoryId?._id || prod.categoryId));
                 const img = prod.images && prod.images[0] ? prod.images[0] : 'https://via.placeholder.com/400x400?text=No+Image';
