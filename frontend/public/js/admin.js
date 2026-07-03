@@ -2,12 +2,12 @@
 
 const API_URL = (() => {
     const hostname = window.location.hostname;
-    
+
     // Local development
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
         return '/api/admin';
     }
-    
+
     // Production - deployed admin panel
     // Replace with your actual Render backend URL
     return 'https://luxoraa-official.onrender.com/api/admin';
@@ -25,18 +25,18 @@ async function api(endpoint, options = {}) {
         },
         ...options
     };
-    
+
     if (options.body && options.body instanceof FormData) {
         delete config.headers['Content-Type'];
     }
-    
+
     const response = await fetch(url, config);
     const data = await response.json();
-    
+
     if (!response.ok) {
         throw new Error(data.message || 'API Error');
     }
-    
+
     return data;
 }
 
@@ -292,16 +292,16 @@ async function handleLogin(e) {
     e.preventDefault();
     const username = document.getElementById('loginUser').value;
     const password = document.getElementById('loginPass').value;
-    
+
     try {
         const data = await api('/login', {
             method: 'POST',
             body: JSON.stringify({ username, password })
         });
-        
+
         authToken = data.token;
         localStorage.setItem('luxoraa_token', authToken);
-        
+
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
         showToast('Welcome to Luxoraa Admin Panel!', 'success');
@@ -328,7 +328,7 @@ function showTab(tab) {
 
     if (tab === 'dashboard') updateDashboard();
     if (tab === 'categories') renderCategories();
-    if (tab === 'products') renderProducts();
+    if (tab === 'products') { renderProducts(); updateAdminCategoryFilter(); }
     if (tab === 'social') renderSocial();
     if (tab === 'addProduct') updateCategoryDropdown();
 
@@ -357,7 +357,7 @@ function resetCategoryForm() {
         <span>800 x 600 px recommended</span>
     `;
     document.getElementById('catImageInput').value = '';
-    
+
     editMode = { active: false, type: null, id: null };
     document.getElementById('addCategoryTitle').textContent = 'Add New Category';
     const submitBtn = document.querySelector('#tab-addCategory button[type="submit"]');
@@ -383,7 +383,7 @@ function resetProductForm() {
         <span>Min 1 - Max 10 images | 600 x 800 px recommended</span>
     `;
     document.getElementById('prodImageInput').value = '';
-    
+
     editMode = { active: false, type: null, id: null };
     document.getElementById('addProductTitle').textContent = 'Add New Product';
     const submitBtn = document.querySelector('#tab-addProduct button[type="submit"]');
@@ -397,13 +397,33 @@ function resetSocialForm() {
     document.getElementById('socialUrl').value = '';
     document.getElementById('socialIcon').value = 'fab fa-';
     document.getElementById('iconPreview').className = 'fab fa-';
-    
+
     editMode = { active: false, type: null, id: null };
     document.getElementById('addSocialTitle').textContent = 'Add Social Media';
     const submitBtn = document.querySelector('#tab-addSocial button[type="submit"]');
     if (submitBtn) {
         submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Social Link';
     }
+}
+
+// ===================== ADMIN CATEGORY FILTER =====================
+let adminCurrentFilter = 'all';
+
+async function updateAdminCategoryFilter() {
+    try {
+        const select = document.getElementById('adminProdCategoryFilter');
+        if (!select) return;
+        const categories = await api('/categories');
+        select.innerHTML = '<option value="all">All Categories</option>' + categories.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+        select.value = adminCurrentFilter;
+    } catch (err) {
+        console.error('Admin filter load error:', err);
+    }
+}
+
+function filterAdminProducts() {
+    adminCurrentFilter = document.getElementById('adminProdCategoryFilter').value;
+    renderProducts();
 }
 
 // ===================== DASHBOARD =====================
@@ -417,7 +437,7 @@ async function updateDashboard() {
         const products = await api('/products');
         const recent = products.slice(0, 5);
         const container = document.getElementById('recentProducts');
-        
+
         if (recent.length === 0) {
             container.innerHTML = '<p style="color:var(--text-light);text-align:center;">No products added yet.</p>';
         } else {
@@ -437,12 +457,12 @@ async function renderCategories() {
     try {
         const categories = await api('/categories');
         const container = document.getElementById('categoriesTable');
-        
+
         if (categories.length === 0) {
             container.innerHTML = '<div class="empty-state"><i class="fas fa-tags"></i><h3>No Categories</h3><p>Add your first category to get started</p></div>';
             return;
         }
-        
+
         container.innerHTML = `<table class="data-table"><thead><tr><th>Image</th><th>Name</th><th>Description</th><th>Actions</th></tr></thead><tbody>${categories.map(cat => `
             <tr>
                 <td><img src="${cat.image || 'https://via.placeholder.com/50'}" class="table-img" onerror="this.src='https://via.placeholder.com/50'"></td>
@@ -464,10 +484,10 @@ async function handleAddCategory(e) {
     const name = document.getElementById('catName').value.trim();
     const image = catImageBase64;
     const desc = document.getElementById('catDesc').value.trim();
-    
+
     if (!name) { showToast('Category name is required!', 'error'); return; }
     if (!image) { showToast('Category image is required!', 'error'); return; }
-    
+
     try {
         if (editMode.active && editMode.type === 'category') {
             await api(`/categories/${editMode.id}`, {
@@ -482,7 +502,7 @@ async function handleAddCategory(e) {
             });
             showToast('Category added successfully!', 'success');
         }
-        
+
         resetCategoryForm();
         showTab('categories');
     } catch (err) {
@@ -495,14 +515,14 @@ async function editCategory(id) {
         const categories = await api('/categories');
         const cat = categories.find(c => c._id === id);
         if (!cat) return;
-        
+
         editMode = { active: true, type: 'category', id: id };
-        
+
         document.getElementById('catName').value = cat.name;
         document.getElementById('catDesc').value = cat.description || '';
         catImageBase64 = cat.image;
         document.getElementById('catImageBase64').value = cat.image;
-        
+
         const previewBox = document.getElementById('catImagePreview');
         const uploadBox = previewBox.closest('.image-upload-box');
         uploadBox.classList.add('has-image');
@@ -510,13 +530,13 @@ async function editCategory(id) {
             <img src="${cat.image}" alt="Category Preview" style="width:100%;max-height:300px;object-fit:contain;border-radius:4px;">
             <button type="button" class="image-upload-remove" onclick="removeCatImage(event)" title="Remove Image"><i class="fas fa-times"></i></button>
         `;
-        
+
         document.getElementById('addCategoryTitle').textContent = 'Edit Category';
         const submitBtn = document.querySelector('#tab-addCategory button[type="submit"]');
         if (submitBtn) {
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Category';
         }
-        
+
         showTab('addCategory');
     } catch (err) {
         showToast(err.message, 'error');
@@ -537,14 +557,18 @@ async function deleteCategory(id) {
 // ===================== PRODUCTS =====================
 async function renderProducts() {
     try {
-        const products = await api('/products');
+        let endpoint = '/products';
+        if (adminCurrentFilter !== 'all') {
+            endpoint = `/products?category=${adminCurrentFilter}`;
+        }
+        const products = await api(endpoint);
         const container = document.getElementById('productsTable');
-        
+
         if (products.length === 0) {
             container.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><h3>No Products</h3><p>Add your first product to get started</p></div>';
             return;
         }
-        
+
         container.innerHTML = `<table class="data-table"><thead><tr><th>Image</th><th>Title</th><th>Category</th><th>Actions</th></tr></thead><tbody>${products.map(prod => {
             const img = prod.images && prod.images[0] ? prod.images[0] : '';
             const catName = prod.categoryId?.name || '-';
@@ -607,22 +631,22 @@ async function editProduct(id) {
         const products = await api('/products');
         const prod = products.find(p => p._id === id);
         if (!prod) return;
-        
+
         editMode = { active: true, type: 'product', id: id };
-        
+
         document.getElementById('prodTitle').value = prod.title;
         document.getElementById('prodLink').value = prod.link;
         document.getElementById('prodDesc').value = prod.description || '';
-        
+
         await updateCategoryDropdown();
         document.getElementById('prodCategory').value = prod.categoryId?._id || prod.categoryId;
-        
+
         prodImagesArray = prod.images || [];
         document.getElementById('prodImagesBase64').value = JSON.stringify(prodImagesArray);
-        
+
         const previewBox = document.getElementById('prodImagesPreview');
         const uploadBox = previewBox.closest('.image-upload-box');
-        
+
         if (prodImagesArray.length > 0) {
             uploadBox.classList.add('has-image');
             previewBox.innerHTML = `
@@ -632,13 +656,13 @@ async function editProduct(id) {
             `;
             updateProdImagesCarousel();
         }
-        
+
         document.getElementById('addProductTitle').textContent = 'Edit Product';
         const submitBtn = document.querySelector('#tab-addProduct button[type="submit"]');
         if (submitBtn) {
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Product';
         }
-        
+
         showTab('addProduct');
     } catch (err) {
         showToast(err.message, 'error');
@@ -661,12 +685,12 @@ async function renderSocial() {
     try {
         const social = await api('/social');
         const container = document.getElementById('socialTable');
-        
+
         if (social.length === 0) {
             container.innerHTML = '<div class="empty-state"><i class="fas fa-share-alt"></i><h3>No Social Links</h3><p>Add your social media links</p></div>';
             return;
         }
-        
+
         container.innerHTML = `<table class="data-table"><thead><tr><th>Icon</th><th>Platform</th><th>URL</th><th>Actions</th></tr></thead><tbody>${social.map(s => `
             <tr>
                 <td><i class="${s.icon}" style="font-size:1.3rem;color:var(--gold);"></i></td>
@@ -688,9 +712,9 @@ async function handleAddSocial(e) {
     const name = document.getElementById('socialName').value.trim();
     const url = document.getElementById('socialUrl').value.trim();
     const icon = document.getElementById('socialIcon').value.trim();
-    
+
     if (!name || !url || !icon) { showToast('All fields required!', 'error'); return; }
-    
+
     try {
         if (editMode.active && editMode.type === 'social') {
             await api(`/social/${editMode.id}`, {
@@ -705,7 +729,7 @@ async function handleAddSocial(e) {
             });
             showToast('Social link added!', 'success');
         }
-        
+
         resetSocialForm();
         showTab('social');
     } catch (err) {
@@ -718,20 +742,20 @@ async function editSocial(id) {
         const social = await api('/social');
         const s = social.find(x => x._id === id);
         if (!s) return;
-        
+
         editMode = { active: true, type: 'social', id: id };
-        
+
         document.getElementById('socialName').value = s.name;
         document.getElementById('socialUrl').value = s.url;
         document.getElementById('socialIcon').value = s.icon;
         document.getElementById('iconPreview').className = s.icon;
-        
+
         document.getElementById('addSocialTitle').textContent = 'Edit Social Media';
         const submitBtn = document.querySelector('#tab-addSocial button[type="submit"]');
         if (submitBtn) {
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Social Link';
         }
-        
+
         showTab('addSocial');
     } catch (err) {
         showToast(err.message, 'error');

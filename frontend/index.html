@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="public/css/style.css">
+<base target="_blank">
 </head>
 <body>
     <nav class="navbar" id="navbar">
@@ -64,10 +65,10 @@
             <h2 class="section-title">Shop by Category</h2>
             <p class="section-desc">Explore our curated categories and find exactly what you are looking for</p>
         </div>
-        
+
         <!-- 3x3 Grid -->
         <div class="categories-grid" id="categoriesGrid"></div>
-        
+
         <div style="text-align:center;margin-top:40px;">
             <a href="categories.html" class="btn btn-outline">View All Categories <i class="fas fa-arrow-right"></i></a>
         </div>
@@ -163,13 +164,13 @@
         window.addEventListener('scroll', () => {
             const navbar = document.getElementById('navbar');
             const currentScroll = window.scrollY;
-            
+
             if (currentScroll > 50) {
                 navbar.classList.add('scrolled');
             } else {
                 navbar.classList.remove('scrolled');
             }
-            
+
             if (window.innerWidth <= 768) {
                 if (currentScroll > lastScroll && currentScroll > 100) {
                     navbar.style.transform = 'translateY(-100%)';
@@ -181,30 +182,30 @@
             }
             lastScroll = currentScroll;
         });
-        
+
         // ===== MOBILE MENU =====
         function openMobileMenu() {
             document.getElementById('mobileMenu').classList.add('open');
             document.getElementById('mobileMenuOverlay').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeMobileMenu() {
             document.getElementById('mobileMenu').classList.remove('open');
             document.getElementById('mobileMenuOverlay').classList.remove('active');
             document.body.style.overflow = '';
         }
-        
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeMobileMenu();
         });
-        
+
         // ===== INTERSECTION OBSERVER =====
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
         };
-        
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -212,7 +213,7 @@
                 }
             });
         }, observerOptions);
-        
+
         document.querySelectorAll('.animate').forEach(el => observer.observe(el));
     </script>
 </body>

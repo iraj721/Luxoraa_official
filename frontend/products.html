@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="public/css/style.css">
+<base target="_blank">
 </head>
 <body>
     <nav class="navbar" id="navbar">
@@ -112,13 +113,13 @@
             document.getElementById('mobileMenuOverlay').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeMobileMenu() {
             document.getElementById('mobileMenu').classList.remove('open');
             document.getElementById('mobileMenuOverlay').classList.remove('active');
             document.body.style.overflow = '';
         }
-        
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeMobileMenu();
         });
@@ -147,12 +148,12 @@
         async function renderAllProducts() {
             const grid = document.getElementById('productsGrid');
             const emptyState = document.getElementById('emptyState');
-            
+
             try {
                 const categories = await api('/categories');
                 const endpoint = currentFilter !== 'all' ? `/products?category=${currentFilter}` : '/products';
                 const products = await api(endpoint);
-                
+
                 if (currentFilter !== 'all') {
                     const cat = categories.find(c => c._id === currentFilter);
                     if (cat) {
@@ -163,13 +164,13 @@
                     document.getElementById('pageTitle').textContent = 'All Products';
                     document.getElementById('pageDesc').textContent = 'Discover our complete premium collection';
                 }
-                
+
                 if (!products.length) {
                     grid.innerHTML = '';
                     emptyState.style.display = 'block';
                     return;
                 }
-                
+
                 emptyState.style.display = 'none';
                 grid.innerHTML = products.map((prod, i) => {
                     const cat = categories.find((c) => c._id === (prod.categoryId?._id || prod.categoryId));
@@ -193,7 +194,7 @@
                         </div>
                     `;
                 }).join('');
-                
+
                 observeAnimations();
             } catch (err) {
                 console.error('Products load error:', err);

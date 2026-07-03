@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="public/css/style.css">
+<base target="_blank">
 </head>
 <body>
     <nav class="navbar" id="navbar">
@@ -47,11 +48,31 @@
     </div>
 
     <section class="section" style="padding-top:40px;">
+        <!-- Search & Dropdown Bar -->
+        <div class="category-search-bar">
+            <div class="category-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" class="category-search-input" id="catSearchInput" placeholder="Search categories..." oninput="filterCategories()">
+            </div>
+            <div class="category-dropdown" id="catDropdown">
+                <button class="category-dropdown-toggle" id="catDropdownToggle" onclick="toggleCatDropdown()">
+                    <span id="catDropdownLabel"><i class="fas fa-list"></i> All Categories</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="category-dropdown-menu" id="catDropdownMenu"></div>
+            </div>
+        </div>
+
         <div class="categories-grid" id="categoriesGrid"></div>
         <div id="emptyState" class="empty-state" style="display:none;">
             <i class="fas fa-tags"></i>
             <h3>No Categories Yet</h3>
             <p>Categories will appear here once added from admin panel</p>
+        </div>
+        <div id="noSearchResults" class="empty-state" style="display:none;">
+            <i class="fas fa-search"></i>
+            <h3>No Categories Found</h3>
+            <p>No categories match your search</p>
         </div>
     </section>
 
@@ -99,57 +120,132 @@
             document.getElementById('mobileMenuOverlay').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeMobileMenu() {
             document.getElementById('mobileMenu').classList.remove('open');
             document.getElementById('mobileMenuOverlay').classList.remove('active');
             document.body.style.overflow = '';
         }
-        
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeMobileMenu();
         });
 
-        // Render all categories in grid (same as home page but all categories)
+        let allCategories = [];
+        let allProducts = [];
+
+        // Render all categories in grid
         async function renderAllCategories() {
             const grid = document.getElementById('categoriesGrid');
             const emptyState = document.getElementById('emptyState');
 
             try {
-                const categories = await api('/categories');
-                const products = await api('/products');
+                allCategories = await api('/categories');
+                allProducts = await api('/products');
 
-                if (!categories.length) {
+                if (!allCategories.length) {
                     grid.innerHTML = '';
                     emptyState.style.display = 'block';
+                    document.getElementById('noSearchResults').style.display = 'none';
                     return;
                 }
 
                 emptyState.style.display = 'none';
-                grid.innerHTML = categories.map((cat, i) => {
-                    const count = products.filter((p) => {
-                        const prodCatId = p.categoryId?._id || p.categoryId;
-                        return prodCatId === cat._id;
-                    }).length;
-                    return `
-                        <div class="category-card animate" style="animation-delay:${i * 0.1}s" onclick="openCategory('${cat._id}')">
-                            <img src="${cat.image || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="${cat.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                            <div class="category-overlay">
-                                <div class="category-name">${cat.name}</div>
-                                <div class="category-count">${count} Products</div>
-                                ${cat.description ? `<div class="category-desc">${cat.description}</div>` : ''}
-                                <div class="category-line"></div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                observeAnimations();
+                updateDropdownMenu();
+                filterCategories();
             } catch (err) {
                 console.error('Categories load error:', err);
                 grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-exclamation-triangle"></i><h3>Unable to load categories</h3><p>Please refresh or try again later.</p></div>';
                 emptyState.style.display = 'none';
             }
+        }
+
+        function updateDropdownMenu() {
+            const menu = document.getElementById('catDropdownMenu');
+            menu.innerHTML = `
+                <div class="category-dropdown-item" onclick="selectCatDropdown('all', 'All Categories')">
+                    <i class="fas fa-th-large"></i> All Categories
+                    <span class="cat-count">${allCategories.length}</span>
+                </div>
+            ` + allCategories.map(cat => {
+                const count = allProducts.filter((p) => {
+                    const prodCatId = p.categoryId?._id || p.categoryId;
+                    return prodCatId === cat._id;
+                }).length;
+                return `
+                    <div class="category-dropdown-item" onclick="selectCatDropdown('${cat._id}', '${cat.name.replace(/'/g, "\'")}')">
+                        <i class="fas fa-tag"></i> ${cat.name}
+                        <span class="cat-count">${count}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleCatDropdown() {
+            const menu = document.getElementById('catDropdownMenu');
+            const toggle = document.getElementById('catDropdownToggle');
+            menu.classList.toggle('open');
+            toggle.classList.toggle('active');
+        }
+
+        function selectCatDropdown(catId, catName) {
+            document.getElementById('catDropdownLabel').innerHTML = `<i class="fas fa-list"></i> ${catName}`;
+            document.getElementById('catDropdownMenu').classList.remove('open');
+            document.getElementById('catDropdownToggle').classList.remove('active');
+
+            if (catId === 'all') {
+                filterCategories();
+            } else {
+                window.location.href = 'products.html?category=' + catId;
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('catDropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                const menu = document.getElementById('catDropdownMenu');
+                const toggle = document.getElementById('catDropdownToggle');
+                if (menu) menu.classList.remove('open');
+                if (toggle) toggle.classList.remove('active');
+            }
+        });
+
+        function filterCategories() {
+            const searchTerm = document.getElementById('catSearchInput').value.toLowerCase().trim();
+            const grid = document.getElementById('categoriesGrid');
+            const noResults = document.getElementById('noSearchResults');
+
+            const filtered = allCategories.filter(cat => 
+                cat.name.toLowerCase().includes(searchTerm)
+            );
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            noResults.style.display = 'none';
+            grid.innerHTML = filtered.map((cat, i) => {
+                const count = allProducts.filter((p) => {
+                    const prodCatId = p.categoryId?._id || p.categoryId;
+                    return prodCatId === cat._id;
+                }).length;
+                return `
+                    <div class="category-card animate" style="animation-delay:${i * 0.1}s" onclick="openCategory('${cat._id}')">
+                        <img src="${cat.image || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="${cat.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                        <div class="category-overlay">
+                            <div class="category-name">${cat.name}</div>
+                            <div class="category-count">${count} Products</div>
+                            ${cat.description ? `<div class="category-desc">${cat.description}</div>` : ''}
+                            <div class="category-line"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            observeAnimations();
         }
 
         function openCategory(catId) {

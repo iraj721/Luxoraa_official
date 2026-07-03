@@ -3,12 +3,12 @@
 // Auto-detect API URL based on environment
 const API_URL = (() => {
     const hostname = window.location.hostname;
-    
+
     // Local development
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
         return '/api/public';
     }
-    
+
     // Production - deployed frontend
     // Replace with your actual Render backend URL (NO trailing slash)
     return 'https://luxoraa-official.onrender.com/api/public';
@@ -89,19 +89,19 @@ async function renderSocial() {
 async function renderCategories() {
     const grid = document.getElementById("categoriesGrid");
     if (!grid) return;
-    
+
     try {
         const categories = await api('/categories');
         const products = await api('/products');
-        
+
         if (categories.length === 0) {
             grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-tags"></i><h3>No Categories Yet</h3><p>Coming soon...</p></div>';
             return;
         }
-        
+
         // Home page: max 9 categories (3x3 grid)
         const displayCategories = categories.slice(0, 9);
-        
+
         grid.innerHTML = displayCategories
             .map((cat, i) => {
                 const count = products.filter((p) => {
@@ -121,7 +121,7 @@ async function renderCategories() {
                 `;
             })
             .join("");
-            
+
         observeAnimations();
     } catch (err) {
         console.error('Categories load error:', err);
@@ -133,16 +133,16 @@ async function renderCategories() {
 async function renderProducts() {
     const grid = document.getElementById("productsGrid");
     if (!grid) return;
-    
+
     try {
         const products = await api('/products');
         const categories = await api('/categories');
-        
+
         if (products.length === 0) {
             grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-box-open"></i><h3>No Products Yet</h3><p>Coming soon...</p></div>';
             return;
         }
-        
+
         grid.innerHTML = products
             .slice(-10)
             .reverse()
@@ -186,21 +186,21 @@ async function openProductDetail(prodId) {
         const categories = await api('/categories');
         const prod = products.find((p) => p._id === prodId);
         if (!prod) return;
-        
+
         const cat = categories.find((c) => c._id === (prod.categoryId?._id || prod.categoryId));
         const images = prod.images && prod.images.length > 0 ? prod.images : ['https://via.placeholder.com/600x600?text=No+Image'];
-        
+
         const modal = document.getElementById("productDetailModal");
         const content = document.getElementById("productDetailContent");
-        
+
         if (!modal || !content) {
             window.location.href = 'products.html';
             return;
         }
-        
+
         // Format description with proper line breaks and bullet points
         let formattedDesc = prod.description || 'No description available.';
-        
+
         content.innerHTML = `
             <div class="product-detail-images">
                 <img src="${images[0]}" alt="${prod.title}" class="product-detail-main-img" id="detailMainImg" onerror="this.src='https://via.placeholder.com/600x600?text=No+Image'">
@@ -216,8 +216,17 @@ async function openProductDetail(prodId) {
             </div>
         `;
         modal.classList.add("active");
+        document.body.style.overflow = 'hidden';
     } catch (err) {
         console.error('Product detail error:', err);
+    }
+}
+
+function closeProductDetail() {
+    const modal = document.getElementById("productDetailModal");
+    if (modal) {
+        modal.classList.remove("active");
+        document.body.style.overflow = '';
     }
 }
 
@@ -227,11 +236,6 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
-
-function closeProductDetail() {
-    const modal = document.getElementById("productDetailModal");
-    if (modal) modal.classList.remove("active");
 }
 
 // ===================== ANIMATIONS =====================
@@ -258,6 +262,20 @@ document.addEventListener("DOMContentLoaded", () => {
 // Close modals on overlay click
 document.querySelectorAll(".modal-overlay").forEach((overlay) => {
     overlay.addEventListener("click", (e) => {
-        if (e.target === overlay) overlay.classList.remove("active");
+        if (e.target === overlay) {
+            overlay.classList.remove("active");
+            document.body.style.overflow = '';
+        }
     });
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById("productDetailModal");
+        if (modal && modal.classList.contains('active')) {
+            modal.classList.remove("active");
+            document.body.style.overflow = '';
+        }
+    }
 });

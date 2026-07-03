@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Luxoraa Admin - Dashboard</title>
     <link rel="icon" type="image/x-icon" href="public/images/favicon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="public/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="public/css/admin.css">
+<base target="_blank">
 </head>
 <body>
     <div id="loginScreen" class="login-screen">
@@ -132,7 +133,14 @@
             <div class="tab-content" id="tab-products">
                 <div class="admin-header">
                     <h2>Manage Products</h2>
-                    <button class="btn-admin" onclick="showTab('addProduct')"><i class="fas fa-plus"></i> Add New</button>
+                    <div class="admin-header-actions" style="flex-wrap:wrap;gap:12px;">
+                        <div class="form-group" style="margin-bottom:0;min-width:200px;">
+                            <select class="form-input" id="adminProdCategoryFilter" onchange="filterAdminProducts()" style="padding:10px 14px;font-size:0.85rem;">
+                                <option value="all">All Categories</option>
+                            </select>
+                        </div>
+                        <button class="btn-admin" onclick="showTab('addProduct')"><i class="fas fa-plus"></i> Add New</button>
+                    </div>
                 </div>
                 <div class="admin-card"><div id="productsTable"></div></div>
             </div>
@@ -171,7 +179,7 @@
                             <label class="form-label">Description (Optional)</label>
                             <textarea class="form-input form-textarea" id="catDesc" placeholder="Enter category description..."></textarea>
                         </div>
-                        <div style="display:flex;gap:15px;">
+                        <div style="display:flex;gap:15px;flex-wrap:wrap;">
                             <button type="submit" class="btn-admin btn-success"><i class="fas fa-save"></i> Save Category</button>
                             <button type="button" class="btn-admin btn-secondary" onclick="resetCategoryForm();showTab('categories')"><i class="fas fa-times"></i> Cancel</button>
                         </div>
@@ -224,7 +232,7 @@
                                 <div class="carousel-track" id="carouselTrack"></div>
                             </div>
                         </div>
-                        <div style="display:flex;gap:15px;">
+                        <div style="display:flex;gap:15px;flex-wrap:wrap;">
                             <button type="submit" class="btn-admin btn-success"><i class="fas fa-save"></i> Save Product</button>
                             <button type="button" class="btn-admin btn-secondary" onclick="resetProductForm();showTab('products')"><i class="fas fa-times"></i> Cancel</button>
                         </div>
@@ -258,7 +266,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div style="display:flex;gap:15px;">
+                        <div style="display:flex;gap:15px;flex-wrap:wrap;">
                             <button type="submit" class="btn-admin btn-success"><i class="fas fa-save"></i> Save Social Link</button>
                             <button type="button" class="btn-admin btn-secondary" onclick="resetSocialForm();showTab('social')"><i class="fas fa-times"></i> Cancel</button>
                         </div>
@@ -283,13 +291,13 @@
                 document.body.style.overflow = 'hidden';
             }
         }
-        
+
         function closeAdminMobileMenu() {
             document.getElementById('adminMobileMenu').classList.remove('open');
             document.getElementById('adminMobileOverlay').classList.remove('active');
             document.body.style.overflow = '';
         }
-        
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeAdminMobileMenu();
         });
@@ -304,7 +312,7 @@
                 }
             });
         }
-        
+
         // Override showTab to sync navbar
         const originalShowTab = showTab;
         showTab = function(tab) {
