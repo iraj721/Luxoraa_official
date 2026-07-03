@@ -466,8 +466,8 @@ async function renderCategories() {
         container.innerHTML = `<table class="data-table"><thead><tr><th>Image</th><th>Name</th><th>Description</th><th>Actions</th></tr></thead><tbody>${categories.map(cat => `
             <tr>
                 <td><img src="${cat.image || 'https://via.placeholder.com/50'}" class="table-img" onerror="this.src='https://via.placeholder.com/50'"></td>
-                <td><strong>${cat.name}</strong></td>
-                <td>${cat.description || '-'}</td>
+                <td><strong>${escapeHtml(cat.name)}</strong></td>
+                <td>${cat.description ? escapeHtml(cat.description) : '-'}</td>
                 <td><div class="table-actions">
                     <button class="table-btn edit" onclick="editCategory('${cat._id}')" title="Edit"><i class="fas fa-edit"></i></button>
                     <button class="table-btn delete" onclick="deleteCategory('${cat._id}')" title="Delete"><i class="fas fa-trash"></i></button>
@@ -531,7 +531,7 @@ async function editCategory(id) {
             <button type="button" class="image-upload-remove" onclick="removeCatImage(event)" title="Remove Image"><i class="fas fa-times"></i></button>
         `;
 
-        document.getElementById('addCategoryTitle').textContent = 'Edit Category';
+                document.getElementById('addCategoryTitle').textContent = 'Edit Category';
         const submitBtn = document.querySelector('#tab-addCategory button[type="submit"]');
         if (submitBtn) {
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Category';
@@ -572,7 +572,7 @@ async function renderProducts() {
         container.innerHTML = `<table class="data-table"><thead><tr><th>Image</th><th>Title</th><th>Category</th><th>Actions</th></tr></thead><tbody>${products.map(prod => {
             const img = prod.images && prod.images[0] ? prod.images[0] : '';
             const catName = prod.categoryId?.name || '-';
-            return `<tr><td><img src="${img}" class="table-img" onerror="this.src='https://via.placeholder.com/50'"></td><td><strong>${prod.title}</strong></td><td>${catName}</td><td><div class="table-actions">
+            return `<tr><td><img src="${img}" class="table-img" onerror="this.src='https://via.placeholder.com/50'"></td><td><strong>${escapeHtml(prod.title)}</strong></td><td>${escapeHtml(catName)}</td><td><div class="table-actions">
                 <button class="table-btn edit" onclick="editProduct('${prod._id}')" title="Edit"><i class="fas fa-edit"></i></button>
                 <button class="table-btn delete" onclick="deleteProduct('${prod._id}')" title="Delete"><i class="fas fa-trash"></i></button>
             </div></td></tr>`;
@@ -586,7 +586,7 @@ async function updateCategoryDropdown() {
     try {
         const select = document.getElementById('prodCategory');
         const categories = await api('/categories');
-        select.innerHTML = '<option value="">Select Category</option>' + categories.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+        select.innerHTML = '<option value="">Select Category</option>' + categories.map(c => `<option value="${c._id}">${escapeHtml(c.name)}</option>`).join('');
     } catch (err) {
         showToast(err.message, 'error');
     }
@@ -693,9 +693,9 @@ async function renderSocial() {
 
         container.innerHTML = `<table class="data-table"><thead><tr><th>Icon</th><th>Platform</th><th>URL</th><th>Actions</th></tr></thead><tbody>${social.map(s => `
             <tr>
-                <td><i class="${s.icon}" style="font-size:1.3rem;color:var(--gold);"></i></td>
-                <td><strong>${s.name}</strong></td>
-                <td><a href="${s.url}" target="_blank" style="color:var(--gold);">${s.url}</a></td>
+                <td><i class="${escapeHtml(s.icon)}" style="font-size:1.3rem;color:var(--gold);"></i></td>
+                <td><strong>${escapeHtml(s.name)}</strong></td>
+                <td><a href="${escapeHtml(s.url)}" target="_blank" style="color:var(--gold);">${escapeHtml(s.url)}</a></td>
                 <td><div class="table-actions">
                     <button class="table-btn edit" onclick="editSocial('${s._id}')" title="Edit"><i class="fas fa-edit"></i></button>
                     <button class="table-btn delete" onclick="deleteSocial('${s._id}')" title="Delete"><i class="fas fa-trash"></i></button>
@@ -778,6 +778,14 @@ if (document.getElementById('socialIcon')) {
     document.getElementById('socialIcon').addEventListener('input', function() {
         document.getElementById('iconPreview').className = this.value;
     });
+}
+
+// ===================== ESCAPE HTML UTILITY =====================
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ===================== INIT =====================

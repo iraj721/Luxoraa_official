@@ -54,32 +54,32 @@ async function renderSocial() {
 
         if (navIcons) {
             navIcons.innerHTML = social
-                .map((s) => `<a href="${s.url}" target="_blank" title="${s.name}"><i class="${s.icon}"></i></a>`)
+                .map((s) => `<a href="${escapeHtml(s.url)}" target="_blank" title="${escapeHtml(s.name)}"><i class="${escapeHtml(s.icon)}"></i></a>`)
                 .join("");
         }
 
         if (socialLinks) {
             socialLinks.innerHTML = social
-                .map((s) => `<a href="${s.url}" target="_blank" class="social-link" title="${s.name}"><i class="${s.icon}"></i></a>`)
+                .map((s) => `<a href="${escapeHtml(s.url)}" target="_blank" class="social-link" title="${escapeHtml(s.name)}"><i class="${escapeHtml(s.icon)}"></i></a>`)
                 .join("");
         }
 
         if (footerSocial) {
             footerSocial.innerHTML = social
-                .map((s) => `<li><a href="${s.url}" target="_blank"><i class="${s.icon}"></i> ${s.name}</a></li>`)
+                .map((s) => `<li><a href="${escapeHtml(s.url)}" target="_blank"><i class="${escapeHtml(s.icon)}"></i> ${escapeHtml(s.name)}</a></li>`)
                 .join("");
         }
 
         if (mobileSocial) {
             mobileSocial.innerHTML = social
-                .map((s) => `<a href="${s.url}" target="_blank"><i class="${s.icon}"></i></a>`)
+                .map((s) => `<a href="${escapeHtml(s.url)}" target="_blank"><i class="${escapeHtml(s.icon)}"></i></a>`)
                 .join("");
         }
 
         if (heroBtn && social.length > 0) {
             heroBtn.href = social[0].url;
             heroBtn.target = "_blank";
-            heroBtn.innerHTML = `<i class="${social[0].icon}"></i> Follow Us`;
+            heroBtn.innerHTML = `<i class="${escapeHtml(social[0].icon)}"></i> Follow Us`;
         }
     } catch (err) {
         console.error('Social load error:', err);
@@ -111,11 +111,11 @@ async function renderCategories() {
                 }).length;
                 return `
                     <a href="products.html?category=${cat._id}" class="category-card animate" style="animation-delay:${i * 0.1}s; text-decoration:none; display:block;">
-                        <img src="${cat.image || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="${cat.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                        <img src="${cat.image || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="${escapeHtml(cat.name)}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
                         <div class="category-overlay">
-                            <div class="category-name">${cat.name}</div>
+                            <div class="category-name">${escapeHtml(cat.name)}</div>
                             <div class="category-count">${count} Products</div>
-                            ${cat.description ? `<div class="category-desc">${cat.description}</div>` : ''}
+                            ${cat.description ? `<div class="category-desc">${escapeHtml(cat.description)}</div>` : ''}
                             <div class="category-line"></div>
                         </div>
                     </a>
@@ -153,17 +153,17 @@ async function renderProducts() {
                 return `
                     <div class="product-card animate" style="animation-delay:${i * 0.1}s" onclick="openProductDetail('${prod._id}')">
                         <div class="product-img-wrap">
-                            <img src="${img}" alt="${prod.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'">
+                            <img src="${img}" alt="${escapeHtml(prod.title)}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'">
                             <span class="product-badge">New</span>
                             <div class="product-actions">
                                 <button class="product-action-btn" onclick="event.stopPropagation();openProductDetail('${prod._id}')" title="View"><i class="fas fa-eye"></i></button>
                             </div>
                         </div>
                         <div class="product-info">
-                            <div class="product-category-tag">${cat ? cat.name : 'Uncategorized'}</div>
-                            <h3 class="product-title">${prod.title}</h3>
+                            <div class="product-category-tag">${cat ? escapeHtml(cat.name) : 'Uncategorized'}</div>
+                            <h3 class="product-title">${escapeHtml(prod.title)}</h3>
                             <div class="product-price-row">
-                                <a href="${prod.link}" target="_blank" class="btn-buy" onclick="event.stopPropagation()">Buy Now</a>
+                                <a href="${escapeHtml(prod.link)}" target="_blank" class="btn-buy" onclick="event.stopPropagation()">Buy Now</a>
                             </div>
                         </div>
                     </div>
@@ -204,16 +204,16 @@ async function openProductDetail(prodId) {
         
         content.innerHTML = `
             <div class="product-detail-images">
-                <img src="${images[0]}" alt="${prod.title}" class="product-detail-main-img" id="detailMainImg" onerror="this.src='https://via.placeholder.com/600x600?text=No+Image'">
+                <img src="${images[0]}" alt="${escapeHtml(prod.title)}" class="product-detail-main-img" id="detailMainImg" onerror="this.src='https://via.placeholder.com/600x600?text=No+Image'">
                 <div class="product-detail-thumbs">
                     ${images.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}" onerror="this.src='https://via.placeholder.com/100x100?text=No+Image'" onclick="document.getElementById('detailMainImg').src='${img}';this.parentElement.querySelectorAll('img').forEach(el=>el.classList.remove('active'));this.classList.add('active')">`).join('')}
                 </div>
             </div>
             <div class="product-detail-info">
-                <div class="product-detail-category">${cat ? cat.name : 'Uncategorized'}</div>
-                <h2>${prod.title}</h2>
+                <div class="product-detail-category">${cat ? escapeHtml(cat.name) : 'Uncategorized'}</div>
+                <h2>${escapeHtml(prod.title)}</h2>
                 <div class="product-detail-desc" style="white-space: pre-line; line-height: 1.8; color: var(--text-light);">${escapeHtml(formattedDesc)}</div>
-                <a href="${prod.link}" target="_blank" class="btn btn-primary" style="padding:14px 40px;"><i class="fas fa-shopping-bag"></i> Buy Now</a>
+                <a href="${escapeHtml(prod.link)}" target="_blank" class="btn btn-primary" style="padding:14px 40px;"><i class="fas fa-shopping-bag"></i> Buy Now</a>
             </div>
         `;
         modal.classList.add("active");
