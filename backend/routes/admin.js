@@ -1,128 +1,103 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
 const sharp = require('sharp');
-const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const cloudinary = require('../config/cloudinary');
 
 const { login, verifyToken } = require('../middleware/auth');
 const Category = require('../models/Category');
 const Product = require('../models/Product');
 const Social = require('../models/Social');
 
-// Multer setup for image uploads (optional - for direct file uploads)
-const storage = multer.memoryStorage();
-const upload = multer({ 
-    storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only images allowed'), false);
-        }
-    }
-});
-
-// Helper: Get full base URL from request
-function getBaseUrl(req) {
-    return `${req.protocol}://${req.get('host')}`;
-}
-
-// Helper: Ensure image URL is absolute
-function ensureFullUrl(imageUrl, baseUrl) {
-    if (!imageUrl) return '';
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-        return imageUrl;
-    }
-    if (imageUrl.startsWith('/')) {
-        return baseUrl + imageUrl;
-    }
-    return baseUrl + '/' + imageUrl;
-}
-
-// Helper: Process and save image from buffer
-async function processImage(buffer, filename, width, height) {
-    const processed = await sharp(buffer)
-        .resize(width, height, { fit: 'cover', position: 'center' })
-        .jpeg({ quality: 85 })
-        .toBuffer();
-    
-    const filepath = path.join(__dirname, '../uploads', filename);
-    await sharp(processed).toFile(filepath);
-    return `/uploads/${filename}`;
-}
-
-// Helper: Process and save image from base64
-async function processBase64Image(base64String, filename, width, height) {
-    // Remove data:image/...;base64, prefix if present
-    const base64Data = base64String.replace(/^data:image\/\w+;base64,/, '');
-    const buffer = Buffer.from(base64Data, 'base64');
-    
-    const processed = await sharp(buffer)
-        .resize(width, height, { fit: 'cover', position: 'center' })
-        .jpeg({ quality: 85 })
-        .toBuffer();
-    
-    const filepath = path.join(__dirname, '../uploads', filename);
-    await sharp(processed).toFile(filepath);
-    return `/uploads/${filename}`;
-}
+// ============================================
+// CLOUDINARY UPLOAD HELPERS
+// ============================================
 
 // Helper: Check if string is base64 image
 function isBase64Image(str) {
     return typeof str === 'string' && str.startsWith('data:image');
 }
 
-// Helper: Process images (handles both base64 and file uploads)
-async function processImages(input, filenamePrefix, width, height) {
+// Helper: Upload base64 image to Cloudinary
+async function uploadBase64ToCloudinary(base64String, folder, width, height) {
+    // Remove data:image/...;base64, prefix if present
+    const base64Data = base64String.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Resize with sharp first
+    const processedBuffer = await sharp(buffer)
+        .resize(width, height, { fit: 'cover', position: 'center' })
+        .jpeg({ quality: 85 })
+        .toBuffer();
+
+    // Convert back to base64 for Cloudinary
+    const processedBase64 = `data:image/jpeg;base64,${processedBuffer.toString('base64')}`;
+
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(processedBase64, {
+        folder: folder,
+        resource_type: 'image',
+        transformation: [
+            { quality: 'auto:good' },
+            { fetch_format: 'auto' }
+        ]
+    });
+
+    return result.secure_url;
+}
+
+// Helper: Upload multiple images to Cloudinary
+async function uploadImagesToCloudinary(imagesArray, folder, width, height) {
     const imageUrls = [];
     
-    if (Array.isArray(input)) {
-        for (const item of input) {
-            if (isBase64Image(item)) {
-                const filename = `${filenamePrefix}_${uuidv4()}.jpg`;
-                const url = await processBase64Image(item, filename, width, height);
-                imageUrls.push(url);
-            } else if (typeof item === 'string' && item.startsWith('/uploads/')) {
-                // Already processed image URL, keep as is
-                imageUrls.push(item);
-            }
+    if (!Array.isArray(imagesArray)) return imageUrls;
+
+    for (const item of imagesArray) {
+        if (isBase64Image(item)) {
+            // New base64 image - upload to Cloudinary
+            const url = await uploadBase64ToCloudinary(item, folder, width, height);
+            imageUrls.push(url);
+        } else if (typeof item === 'string' && item.startsWith('http')) {
+            // Already a Cloudinary URL or external URL, keep as is
+            imageUrls.push(item);
         }
     }
-    
+
     return imageUrls;
 }
 
-// Helper: Process product response with full URLs
-function processProductResponse(prod, baseUrl) {
-    const obj = prod.toObject ? prod.toObject() : prod;
-    if (obj.images && Array.isArray(obj.images)) {
-        obj.images = obj.images.map(img => ensureFullUrl(img, baseUrl));
+// Helper: Delete image from Cloudinary by URL
+async function deleteFromCloudinary(imageUrl) {
+    if (!imageUrl || !imageUrl.includes('cloudinary.com')) return;
+    
+    try {
+        // Extract public_id from Cloudinary URL
+        // URL format: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/filename.jpg
+        const urlParts = imageUrl.split('/');
+        const filenameWithExt = urlParts[urlParts.length - 1];
+        const folder = urlParts[urlParts.length - 2];
+        const publicId = `${folder}/${filenameWithExt.split('.')[0]}`;
+        
+        await cloudinary.uploader.destroy(publicId);
+    } catch (err) {
+        console.error('Cloudinary delete error:', err);
     }
-    if (obj.categoryId && typeof obj.categoryId === 'object') {
-        if (obj.categoryId.image) {
-            obj.categoryId.image = ensureFullUrl(obj.categoryId.image, baseUrl);
-        }
-    }
-    return obj;
 }
 
-function processCategoryResponse(cat, baseUrl) {
-    const obj = cat.toObject ? cat.toObject() : cat;
-    obj.image = ensureFullUrl(obj.image, baseUrl);
-    return obj;
-}
+// ============================================
+// AUTH ROUTES
+// ============================================
 
-// Auth routes
 router.post('/login', login);
 
-// Categories CRUD
+// ============================================
+// CATEGORIES CRUD
+// ============================================
+
 router.get('/categories', verifyToken, async (req, res) => {
     try {
-        const baseUrl = getBaseUrl(req);
         const categories = await Category.find().sort({ createdAt: -1 });
-        res.json(categories.map(cat => processCategoryResponse(cat, baseUrl)));
+        res.json(categories);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -132,10 +107,9 @@ router.post('/categories', verifyToken, async (req, res) => {
     try {
         let imageUrl = req.body.image;
         
-        // Handle base64 image
+        // Handle base64 image - upload to Cloudinary
         if (isBase64Image(imageUrl)) {
-            const filename = `cat_${uuidv4()}.jpg`;
-            imageUrl = await processBase64Image(imageUrl, filename, 800, 600);
+            imageUrl = await uploadBase64ToCloudinary(imageUrl, 'luxoraa/categories', 800, 600);
         }
         
         const category = new Category({
@@ -145,8 +119,7 @@ router.post('/categories', verifyToken, async (req, res) => {
         });
         
         await category.save();
-        const baseUrl = getBaseUrl(req);
-        res.status(201).json(processCategoryResponse(category, baseUrl));
+        res.status(201).json(category);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
@@ -159,10 +132,15 @@ router.put('/categories/:id', verifyToken, async (req, res) => {
             description: req.body.description || ''
         };
         
-        // Handle base64 image
+        // Handle image update
         if (isBase64Image(req.body.image)) {
-            const filename = `cat_${uuidv4()}.jpg`;
-            updateData.image = await processBase64Image(req.body.image, filename, 800, 600);
+            // Delete old image from Cloudinary
+            const oldCategory = await Category.findById(req.params.id);
+            if (oldCategory && oldCategory.image) {
+                await deleteFromCloudinary(oldCategory.image);
+            }
+            // Upload new image
+            updateData.image = await uploadBase64ToCloudinary(req.body.image, 'luxoraa/categories', 800, 600);
         } else if (req.body.image) {
             updateData.image = req.body.image;
         }
@@ -173,8 +151,7 @@ router.put('/categories/:id', verifyToken, async (req, res) => {
             { new: true }
         );
         
-        const baseUrl = getBaseUrl(req);
-        res.json(processCategoryResponse(category, baseUrl));
+        res.json(category);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
@@ -182,6 +159,13 @@ router.put('/categories/:id', verifyToken, async (req, res) => {
 
 router.delete('/categories/:id', verifyToken, async (req, res) => {
     try {
+        const category = await Category.findById(req.params.id);
+        
+        // Delete image from Cloudinary
+        if (category && category.image) {
+            await deleteFromCloudinary(category.image);
+        }
+        
         await Category.findByIdAndDelete(req.params.id);
         res.json({ message: 'Category deleted' });
     } catch (err) {
@@ -189,12 +173,16 @@ router.delete('/categories/:id', verifyToken, async (req, res) => {
     }
 });
 
-// Products CRUD
+// ============================================
+// PRODUCTS CRUD
+// ============================================
+
 router.get('/products', verifyToken, async (req, res) => {
     try {
-        const baseUrl = getBaseUrl(req);
-        const products = await Product.find().sort({ createdAt: -1 }).populate('categoryId', 'name image description');
-        res.json(products.map(prod => processProductResponse(prod, baseUrl)));
+        const products = await Product.find()
+            .sort({ createdAt: -1 })
+            .populate('categoryId', 'name image description');
+        res.json(products);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -207,7 +195,7 @@ router.post('/products', verifyToken, async (req, res) => {
         // Handle images array from frontend
         if (req.body.images) {
             const images = Array.isArray(req.body.images) ? req.body.images : JSON.parse(req.body.images);
-            imageUrls = await processImages(images, 'prod', 600, 800);
+            imageUrls = await uploadImagesToCloudinary(images, 'luxoraa/products', 600, 800);
         }
         
         const product = new Product({
@@ -219,8 +207,7 @@ router.post('/products', verifyToken, async (req, res) => {
         });
         
         await product.save();
-        const baseUrl = getBaseUrl(req);
-        res.status(201).json(processProductResponse(product, baseUrl));
+        res.status(201).json(product);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
@@ -235,10 +222,21 @@ router.put('/products/:id', verifyToken, async (req, res) => {
             link: req.body.link
         };
         
-        // Handle images array from frontend
+        // Handle images update
         if (req.body.images) {
             const images = Array.isArray(req.body.images) ? req.body.images : JSON.parse(req.body.images);
-            updateData.images = await processImages(images, 'prod', 600, 800);
+            
+            // Get old product to delete removed images
+            const oldProduct = await Product.findById(req.params.id);
+            if (oldProduct && oldProduct.images) {
+                const newUrls = images.filter(img => img.startsWith('http'));
+                const removedImages = oldProduct.images.filter(img => !newUrls.includes(img));
+                for (const img of removedImages) {
+                    await deleteFromCloudinary(img);
+                }
+            }
+            
+            updateData.images = await uploadImagesToCloudinary(images, 'luxoraa/products', 600, 800);
         }
         
         const product = await Product.findByIdAndUpdate(
@@ -247,8 +245,7 @@ router.put('/products/:id', verifyToken, async (req, res) => {
             { new: true }
         );
         
-        const baseUrl = getBaseUrl(req);
-        res.json(processProductResponse(product, baseUrl));
+        res.json(product);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
@@ -256,6 +253,15 @@ router.put('/products/:id', verifyToken, async (req, res) => {
 
 router.delete('/products/:id', verifyToken, async (req, res) => {
     try {
+        const product = await Product.findById(req.params.id);
+        
+        // Delete all images from Cloudinary
+        if (product && product.images) {
+            for (const img of product.images) {
+                await deleteFromCloudinary(img);
+            }
+        }
+        
         await Product.findByIdAndDelete(req.params.id);
         res.json({ message: 'Product deleted' });
     } catch (err) {
@@ -263,7 +269,10 @@ router.delete('/products/:id', verifyToken, async (req, res) => {
     }
 });
 
-// Social CRUD
+// ============================================
+// SOCIAL CRUD
+// ============================================
+
 router.get('/social', verifyToken, async (req, res) => {
     try {
         const social = await Social.find().sort({ createdAt: -1 });
@@ -313,7 +322,10 @@ router.delete('/social/:id', verifyToken, async (req, res) => {
     }
 });
 
-// Dashboard stats
+// ============================================
+// DASHBOARD STATS
+// ============================================
+
 router.get('/stats', verifyToken, async (req, res) => {
     try {
         const categories = await Category.countDocuments();

@@ -20,10 +20,9 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 app.use(cors({
     origin: function(origin, callback) {
-        // Allow requests with no origin (mobile apps, curl, etc.)
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) === -1) {
-            return callback(null, true); // Allow all for now, restrict in production if needed
+            return callback(null, true);
         }
         return callback(null, true);
     },
@@ -35,26 +34,20 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Static files - uploads folder
+// Static files - uploads folder (temporary for old images migration)
+// Remove this after migrating old images to Cloudinary
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Create uploads directory if not exists
-const fs = require('fs');
-if (!fs.existsSync('uploads')) {
-    fs.mkdirSync('uploads');
-}
 
 // API Routes
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/public', require('./routes/public'));
 
 // ============================================
-// SERVE FRONTEND STATIC FILES (for local dev)
+// SERVE FRONTEND STATIC FILES
 // ============================================
 const frontendPath = path.join(__dirname, '../frontend');
 app.use(express.static(frontendPath));
 
-// Serve index.html for root and all frontend routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
@@ -83,7 +76,6 @@ app.get('/admin', (req, res) => {
     res.redirect('/admin.html');
 });
 
-// Serve root favicon for browsers that request /favicon.ico
 app.get('/favicon.ico', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/images/favicon.ico'));
 });
@@ -105,5 +97,6 @@ app.listen(PORT, () => {
     console.log(`Frontend: http://localhost:${PORT}`);
     console.log(`Admin: http://localhost:${PORT}/admin.html`);
     console.log(`API: http://localhost:${PORT}/api`);
+    console.log(`Cloudinary: ${process.env.CLOUDINARY_CLOUD_NAME || 'NOT CONFIGURED'}`);
     console.log(`========================================`);
 });
