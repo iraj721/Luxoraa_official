@@ -15,6 +15,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    minify: 'terser',
+    cssMinify: true,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -22,6 +24,11 @@ export default defineConfig({
         products: resolve(__dirname, 'products.html'),
         about: resolve(__dirname, 'about.html'),
         admin: resolve(__dirname, 'admin.html')
+      },
+      output: {
+        manualChunks: {
+          vendor: ['app.js']
+        }
       }
     }
   },
