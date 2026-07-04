@@ -1,16 +1,10 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "vite.config.js",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "routes": [
-    { "src": "/sitemap.xml", "dest": "/sitemap.xml", "headers": { "Content-Type": "application/xml" } },
+    { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
     { "src": "/google26b8097e3c616cdc.html", "dest": "/google26b8097e3c616cdc.html" },
     { "src": "/admin", "dest": "/admin.html" },
     { "src": "/admin.html", "dest": "/admin.html" },
@@ -21,7 +15,6 @@
     { "src": "/js/(.*)", "dest": "/js/$1" },
     { "src": "/css/(.*)", "dest": "/css/$1" },
     { "src": "/images/(.*)", "dest": "/images/$1" },
-    { "src": "/assets/(.*)", "dest": "/assets/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }

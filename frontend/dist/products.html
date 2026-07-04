@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Luxoraa_official - Products</title>
+    <link rel="icon" type="image/x-icon" href="/assets/favicon-Bsf5nFpq.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon-Bsf5nFpq.ico">
+    <link rel="apple-touch-icon" href="/assets/logo-cXf17dCS.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" crossorigin href="/assets/style-BTO8qRoe.css">
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <a href="index.html" class="nav-logo">
+            <img src="/assets/logo-cXf17dCS.jpg" alt="Luxoraa" class="nav-logo-img">
+            <span class="nav-logo-text">LUXORAA</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html" target="_self">Home</a></li>
+            <li><a href="categories.html" target="_self">Categories</a></li>
+            <li><a href="products.html" target="_self" class="active">Products</a></li>
+            <li><a href="about.html" target="_self">About</a></li>
+        </ul>
+        <div class="nav-icons" id="navIcons"></div>
+        <button class="mobile-menu-btn" onclick="openMobileMenu()" aria-label="Open menu"><i class="fas fa-bars"></i></button>
+    </nav>
+
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-menu-close" onclick="closeMobileMenu()" aria-label="Close menu"><i class="fas fa-times"></i></button>
+        <ul class="mobile-menu-links">
+            <li><a href="index.html" target="_self">Home</a></li>
+            <li><a href="categories.html" target="_self">Categories</a></li>
+            <li><a href="products.html" target="_self" class="active">Products</a></li>
+            <li><a href="about.html" target="_self">About</a></li>
+        </ul>
+        <div class="mobile-menu-social" id="mobileMenuSocial"></div>
+    </div>
+
+    <div class="page-header">
+        <div class="page-header-content">
+            <h1 id="pageTitle">All Products</h1>
+            <p id="pageDesc">Discover our complete premium collection</p>
+        </div>
+    </div>
+
+    <section class="section" style="padding-top:40px;">
+        <div class="filter-bar" id="filterBar">
+            <div class="filter-label"><i class="fas fa-filter"></i> Filter by Category:</div>
+            <div class="filter-tags" id="filterTags"></div>
+        </div>
+        <div class="products-grid" id="productsGrid"></div>
+        <div id="emptyState" class="empty-state" style="display:none;">
+            <i class="fas fa-box-open"></i>
+            <h3>No Products Found</h3>
+            <p>Products will appear here once added from admin panel</p>
+        </div>
+    </section>
+
+    <footer class="footer" id="footer">
+        <div class="footer-grid">
+            <div>
+                <div class="footer-brand">
+                    <img src="/assets/logo-cXf17dCS.jpg" alt="Luxoraa">
+                    <h3>LUXORAA</h3>
+                </div>
+                <p class="footer-desc">Your destination for premium fashion and lifestyle products.</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html" target="_self">Home</a></li>
+                    <li><a href="categories.html" target="_self">Categories</a></li>
+                    <li><a href="products.html" target="_self">Products</a></li>
+                    <li><a href="about.html" target="_self">About Us</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Social Media</h4>
+                <ul class="footer-links" id="footerSocialLinks"></ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Luxoraa Official. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div class="modal-overlay product-detail-modal" id="productDetailModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeProductDetail()" aria-label="Close"><i class="fas fa-times"></i></button>
+            <div class="product-detail-content" id="productDetailContent"></div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/app.js"></script>
+    <script>
+        let currentFilter = 'all';
+
+        // Navbar scroll
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
+        });
+
+        function openMobileMenu() {
+            document.getElementById('mobileMenu').classList.add('open');
+            document.getElementById('mobileMenuOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenu() {
+            document.getElementById('mobileMenu').classList.remove('open');
+            document.getElementById('mobileMenuOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMobileMenu();
+        });
+
+        async function renderFilterTags() {
+            const container = document.getElementById('filterTags');
+            try {
+                const categories = await api('/categories');
+                const allBtn = `<button class="filter-tag ${currentFilter === 'all' ? 'active' : ''}" onclick="filterProducts('all')">All</button>`;
+                const catBtns = categories.map(c => 
+                    `<button class="filter-tag ${currentFilter === c._id ? 'active' : ''}" onclick="filterProducts('${c._id}')">${c.name}</button>`
+                ).join('');
+                container.innerHTML = allBtn + catBtns;
+            } catch (err) {
+                console.error('Filter tags load error:', err);
+                container.innerHTML = '<div class="filter-tag">Unable to load categories</div>';
+            }
+        }
+
+        function filterProducts(catId) {
+            currentFilter = catId;
+            renderFilterTags();
+            renderAllProducts();
+        }
+
+        async function renderAllProducts() {
+            const grid = document.getElementById('productsGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            try {
+                const categories = await api('/categories');
+                const endpoint = currentFilter !== 'all' ? `/products?category=${currentFilter}` : '/products';
+                const products = await api(endpoint);
+
+                if (currentFilter !== 'all') {
+                    const cat = categories.find(c => c._id === currentFilter);
+                    if (cat) {
+                        document.getElementById('pageTitle').textContent = cat.name;
+                        document.getElementById('pageDesc').textContent = cat.description || `Browse our ${cat.name} collection`;
+                    }
+                } else {
+                    document.getElementById('pageTitle').textContent = 'All Products';
+                    document.getElementById('pageDesc').textContent = 'Discover our complete premium collection';
+                }
+
+                if (!products.length) {
+                    grid.innerHTML = '';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+
+                emptyState.style.display = 'none';
+                grid.innerHTML = products.map((prod, i) => {
+                    const cat = categories.find((c) => c._id === (prod.categoryId?._id || prod.categoryId));
+                    const img = prod.images && prod.images[0] ? prod.images[0] : 'https://via.placeholder.com/400x400?text=No+Image';
+                    return `
+                        <div class="product-card animate" style="animation-delay:${i * 0.05}s" onclick="openProductDetail('${prod._id}')">
+                            <div class="product-img-wrap">
+                                <img src="${img}" alt="${prod.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'">
+                                <span class="product-badge">New</span>
+                                <div class="product-actions">
+                                    <button class="product-action-btn" onclick="event.stopPropagation();openProductDetail('${prod._id}')" title="View"><i class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="product-info">
+                                <div class="product-category-tag">${cat ? cat.name : 'Uncategorized'}</div>
+                                <h3 class="product-title">${prod.title}</h3>
+                                <div class="product-price-row">
+                                    <a href="${prod.link}" target="_blank" class="btn-buy" onclick="event.stopPropagation()">Full Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                observeAnimations();
+            } catch (err) {
+                console.error('Products load error:', err);
+                grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-exclamation-triangle"></i><h3>Connection Error</h3><p>Cannot connect to backend.</p></div>';
+                emptyState.style.display = 'none';
+            }
+        }
+
+        function checkUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const catId = params.get('category');
+            if (catId) {
+                currentFilter = catId;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkUrlParams();
+            renderSocial();
+            renderFilterTags();
+            renderAllProducts();
+        });
+    </script>
+</body>
+</html>

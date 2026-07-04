@@ -1,6 +1,7 @@
 {
-  "name": "luxoraa-frontend",
+  "name": "luxoraa-official",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
