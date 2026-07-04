@@ -166,7 +166,7 @@ async function renderProducts() {
                             <div class="product-category-tag">${cat ? escapeHtml(cat.name) : 'Uncategorized'}</div>
                             <h3 class="product-title">${escapeHtml(prod.title)}</h3>
                             <div class="product-price-row">
-                                <a href="${escapeHtml(prod.link)}" target="_blank" class="btn-buy" onclick="event.stopPropagation()">Buy Now</a>
+                                <a href="${escapeHtml(prod.link)}" target="_blank" class="btn-buy" onclick="event.stopPropagation()">Full Details</a>
                             </div>
                         </div>
                     </div>
@@ -216,7 +216,7 @@ async function openProductDetail(prodId) {
                 <div class="product-detail-category">${cat ? escapeHtml(cat.name) : 'Uncategorized'}</div>
                 <h2>${escapeHtml(prod.title)}</h2>
                 <div class="product-detail-desc" style="white-space: pre-line; line-height: 1.8; color: var(--text-light);">${escapeHtml(formattedDesc)}</div>
-                <a href="${escapeHtml(prod.link)}" target="_blank" class="btn btn-primary" style="padding:14px 40px;"><i class="fas fa-shopping-bag"></i> Buy Now</a>
+                <a href="${escapeHtml(prod.link)}" target="_blank" class="btn btn-primary" style="padding:14px 40px;"><i class="fas fa-shopping-bag"></i> Full Details</a>
             </div>
         `;
         modal.classList.add("active");
