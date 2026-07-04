@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://luxoraa-official.vercel.app/sitemap.xml

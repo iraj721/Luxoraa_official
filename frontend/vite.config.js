@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { copyFileSync, existsSync } from 'fs';
 
 export default defineConfig({
   server: {
@@ -24,5 +25,19 @@ export default defineConfig({
       }
     }
   },
-  publicDir: 'public'
+  publicDir: 'public',
+  plugins: [
+    {
+      name: 'copy-root-files',
+      closeBundle() {
+        const files = ['sitemap.xml', 'robots.txt', 'google26b8097e3c616cdc.html'];
+        files.forEach(file => {
+          if (existsSync(file)) {
+            copyFileSync(file, `dist/${file}`);
+            console.log(`Copied ${file} to dist/`);
+          }
+        });
+      }
+    }
+  ]
 });
